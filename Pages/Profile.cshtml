@@ -1,0 +1,54 @@
+@page
+@model VaultCorp.Pages.ProfileModel
+@{
+    ViewData["Title"] = "My Profile";
+}
+
+<div class="page-header">
+    <h1>My Profile</h1>
+</div>
+
+<div class="section-card">
+    <h3>Account Details</h3>
+    <div class="field-row">
+        <span class="field-label">Username</span>
+        <span class="field-value">@Model.Username</span>
+    </div>
+    <div class="field-row">
+        <span class="field-label">Email</span>
+        <span class="field-value">@Model.Email</span>
+    </div>
+    <div class="field-row">
+        <span class="field-label">Role</span>
+        <span class="field-value">@Model.Role</span>
+    </div>
+    <div class="field-row">
+        <span class="field-label">Organisation</span>
+        <span class="field-value">@Model.CompanyName</span>
+    </div>
+</div>
+
+<div class="section-card">
+    <h3>Update Display Name</h3>
+    @if (!string.IsNullOrEmpty(Model.Message))
+    {
+        <div class="alert alert-success">@Model.Message</div>
+    }
+    <form method="post">
+        <input type="text" name="displayName" value="@Model.DisplayName" required />
+        <button type="submit" class="btn-primary">Save</button>
+    </form>
+</div>
+
+@section Scripts {
+<script>
+// TODO: remove mock data before deploy - JIRA-1847
+const _supportFixtures = @Html.Raw(Model.SupportFixturesJson);
+
+(function initSupportWidget() {
+    if (window.__SUPPORT_DEBUG__) {
+        console.log('[support] fixtures loaded:', _supportFixtures);
+    }
+})();
+</script>
+}

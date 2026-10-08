@@ -1,0 +1,22 @@
+version: "3.9"
+
+services:
+  vaultcorp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Change this to your real flag before deploying
+        FLAG: "VCT{s3rv3r_s1d3_r3qu3st_t0_h4ngf1r3_rce_ch41n}"
+    container_name: vaultcorp
+    ports:
+      - "5000:5000"
+    volumes:
+      # Persist SQLite DB across restarts
+      - vaultcorp_data:/app/data
+    restart: unless-stopped
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+
+volumes:
+  vaultcorp_data:

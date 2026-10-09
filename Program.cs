@@ -54,7 +54,9 @@ app.UseRouting();
 app.UseHangfireDashboard("/hangfire", new DashboardOptions
 {
     Authorization        = new[] { new LocalRequestsOnlyAuthorizationFilter() },
-    IgnoreAntiforgeryToken = true
+    IgnoreAntiforgeryToken = true,
+    // Custom JS file loaded by the dashboard — contains the internal API hint (comment)
+    JavaScriptPath       = "/js/hangfire-notes.js"
 });
 
 // Pre-register recurring jobs so they appear in the dashboard and reveal types/methods

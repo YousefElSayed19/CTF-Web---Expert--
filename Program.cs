@@ -53,10 +53,8 @@ app.UseRouting();
 // → when the server fetches its own /hangfire via SSRF, RemoteIpAddress IS loopback → passes.
 app.UseHangfireDashboard("/hangfire", new DashboardOptions
 {
-    Authorization        = new[] { new LocalRequestsOnlyAuthorizationFilter() },
-    IgnoreAntiforgeryToken = true,
-    // Custom JS file loaded by the dashboard — contains the internal API hint (comment)
-    JavaScriptPath       = "/js/hangfire-notes.js"
+    Authorization          = new[] { new LocalRequestsOnlyAuthorizationFilter() },
+    IgnoreAntiforgeryToken = true
 });
 
 // Pre-register recurring jobs so they appear in the dashboard and reveal types/methods

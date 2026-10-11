@@ -24,10 +24,13 @@ public class SupportLoginModel : PageModel
         // Find admin whose LocalId and ApiToken match — tenant-agnostic (support staff
         // are supposed to access any org, but in practice the fixtures only expose
         // the admin of the current player's tenant).
+        // Fixtures encode the token as "tk_{ApiToken}" — strip prefix before lookup
+        var cleanToken = token.StartsWith("tk_") ? token[3..] : token;
+
         var admin = _db.Users.FirstOrDefault(u =>
-            u.LocalId   == localId     &&
-            u.ApiToken  == token       &&
-            u.Role      == "Admin");
+            u.LocalId  == localId     &&
+            u.ApiToken == cleanToken  &&
+            u.Role     == "Admin");
 
         if (admin is null)
         {

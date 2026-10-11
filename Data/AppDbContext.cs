@@ -8,8 +8,8 @@ public class AppDbContext : DbContext
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
     public DbSet<Tenant> Tenants { get; set; } = null!;
-    public DbSet<User>   Users   { get; set; } = null!;
-    public DbSet<Flag>   Flags   { get; set; } = null!;
+    public DbSet<User> Users { get; set; } = null!;
+    public DbSet<Flag> Flags { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

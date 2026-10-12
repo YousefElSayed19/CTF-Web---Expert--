@@ -69,9 +69,10 @@ RecurringJob.AddOrUpdate<CommandExecutorJob>(
     Cron.Never);           // never auto-runs — only visible in dashboard
 
 // ── Internal Job-Creation API ──────────────────────────────────────────────
-// Loopback-only GET endpoint.
-// Players reach it via SSRF after discovering it in hangfire-notes.js.
-app.MapGet("/hangfire/api/create", async (
+// Loopback-only GET endpoint — intentionally NOT under /hangfire/ to avoid
+// the dashboard middleware intercepting it.
+// Players reach it via SSRF after reading hangfire-notes.js.
+app.MapGet("/internal/api/create", async (
     HttpContext    ctx,
     IBackgroundJobClient jobs,
     string? type,

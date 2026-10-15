@@ -3,7 +3,7 @@ version: "3.9"
 services:
   vaultcorp:
     build:
-      context: .
+      context: ../src
       dockerfile: Dockerfile
       args:
         # Change this to your real flag before deploying

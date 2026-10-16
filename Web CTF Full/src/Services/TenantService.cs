@@ -92,13 +92,6 @@ public class TenantService
         };
         _db.Users.Add(admin);
 
-        // 6. Flag (unique per tenant)
-        _db.Flags.Add(new Flag
-        {
-            TenantId = tenantId,
-            Value    = $"VCT{{{GenerateToken(32)}}}"
-        });
-
         await _db.SaveChangesAsync();
         return (tenant, player);
     }

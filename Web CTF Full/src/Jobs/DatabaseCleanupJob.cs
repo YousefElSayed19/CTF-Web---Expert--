@@ -28,7 +28,6 @@ public class DatabaseCleanupJob
         foreach (var tenant in old)
         {
             _db.Users.RemoveRange(_db.Users.Where(u => u.TenantId == tenant.Id));
-            _db.Flags.RemoveRange(_db.Flags.Where(f => f.TenantId == tenant.Id));
             _db.Tenants.Remove(tenant);
         }
 

@@ -1,0 +1,16 @@
+---
+contract_version: 1
+name: vaultcorp-ssrf-rce
+track: web
+difficulty: hard
+description: Six-stage SaaS exploit chain from client-side secret leak to SSRF-driven RCE via an unauthenticated Hangfire dashboard (CVE-2021-41238).
+flag_hash: 39a58dfd73f798ab8ea74bd4a2a9d4f2108eb8fe411ad7f2cd94734d645dc4a0
+status: experimental
+techniques: []
+# Optional v1 fields (see contracts/lab.schema.json):
+# checkpoint_flag_hash: 0000000000000000000000000000000000000000000000000000000000000000
+port: 5000
+# Proposed technique slugs (pages not yet written under content/technique/ —
+# add them and uncomment once authored):
+# techniques: [ssrf-waf-bypass-ip-obfuscation, hangfire-unauthenticated-dashboard-rce, client-side-secret-leak-obfuscated-js, hidden-endpoint-directory-bruteforce]
+---

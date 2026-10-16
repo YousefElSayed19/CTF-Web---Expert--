@@ -9,7 +9,6 @@ public class AppDbContext : DbContext
 
     public DbSet<Tenant> Tenants { get; set; } = null!;
     public DbSet<User> Users { get; set; } = null!;
-    public DbSet<Flag> Flags { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -6,8 +6,11 @@ services:
       context: ../src
       dockerfile: Dockerfile
       args:
-        # Change this to your real flag before deploying
-        FLAG: "duck{s3rv3r_s1d3_r3qu3st_t0_h4ngf1r3_rce_ch41n}"
+        # Flag plaintext lives only here (a service file inside the lab
+        # directory) — it must never be written to lab.yml, README.md,
+        # or anywhere outside labs/. The SHA-256 of this exact string
+        # (braces included) is recorded as flag_hash in lab.yml.
+        FLAG: "duck{z80wxfgg31zc62xcgeq7qt77s6323iq3}"
     container_name: vaultcorp
     ports:
       - "5000:5000"

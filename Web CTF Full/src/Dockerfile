@@ -1,5 +1,5 @@
 # ── Stage 1: Build ────────────────────────────────────────────────────────
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk@sha256:f7e28a0a3f6f9235929ec19274fd0ddf8534e9159f99fac602ac73304f1ce99f AS build
 WORKDIR /src
 
 COPY VaultCorp.csproj .
@@ -9,7 +9,7 @@ COPY . .
 RUN dotnet publish -c Release -o /app/publish --no-restore
 
 # ── Stage 2: Runtime ───────────────────────────────────────────────────────
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet@sha256:1601380775673021a23ea5985669f1daf03719faaa684f839da1752fb48cfc7f AS runtime
 WORKDIR /app
 
 # Copy published output

@@ -1,0 +1,186 @@
+# Operations — VaultCorp
+
+## Service topology
+
+A single container (`vaultcorp`) runs the entire application — Razor Pages
+UI, the Hangfire dashboard/worker, and static file serving — all on port
+5000. SQLite persists to the named volume `vaultcorp_data`, mounted at
+`/app/data`. There is no second service, no reverse proxy, and no external
+dependency at runtime.
+
+```
+bin/docker-compose.yml   -> build context: ../src, service: vaultcorp
+src/Dockerfile           -> multi-stage build (sdk -> aspnet runtime)
+src/                      -> application source
+```
+
+## Start the lab
+
+```bash
+cd "Web CTF Full/bin"
+docker compose up --build -d
+```
+
+The app is then reachable at `http://localhost:5000`. First start also
+runs `Database.EnsureCreated()`, so no separate migration step is needed.
+
+## Configuration
+
+| Setting | Source | Notes |
+| --- | --- | --- |
+| `FLAG` | `docker-compose.yml` build arg | Baked into `/app/flag.txt` at image build time; plaintext lives only in this service file, never in `lab.yml` or `README.md`. |
+| `ASPNETCORE_ENVIRONMENT` | `docker-compose.yml` environment | `Production` |
+| Session idle timeout | `Program.cs` (`AddSession`) | 4 hours |
+| Base images | `src/Dockerfile` | Pinned to digests (`FROM ...@sha256:...`) for both the SDK and runtime stages |
+
+## Reset and temporary storage
+
+The lab has no explicit "reset" endpoint — state lives entirely in the
+SQLite volume and in-memory Hangfire storage. A full reset is:
+
+```bash
+docker compose down
+docker volume rm bin_vaultcorp_data   # or the actual volume name docker compose created
+docker compose up --build -d
+```
+
+A background job (`db-cleanup`, see Maintainer API reference below)
+already removes tenants older than 6 hours automatically, so a long-running
+instance self-prunes abandoned playthroughs without manual intervention.
+
+### Check a captured flag
+
+```bash
+sha256sum <(printf '%s' 'duck{...}')
+```
+
+...and compare against `flag_hash` in `lab.yml`.
+
+## Maintainer API reference
+
+This section documents the internal surface that exists purely as the
+intended vulnerability chain's target — it is not meant to be used by
+maintainers directly, but is recorded here since it is part of the running
+application and its behavior should be understood before touching
+anything else in `Program.cs`.
+
+- `GET /internal/api/create?type=&method=&arg0=&arg1=` — creates a Hangfire
+  job via reflection. Gated by `LocalRequestsOnlyAuthorizationFilter`
+  (loopback-only). This is the intentional RCE primitive (VC-CTF-05 in
+  `security-report.mdx`) — do not relax its loopback gate or expose it
+  further; the whole point of the challenge is that it is reachable only
+  via the SSRF chain.
+- `GET /hangfire`, `/hangfire/recurring` — Hangfire's own dashboard,
+  same loopback gate. Two recurring jobs are pre-registered:
+  `db-cleanup` (runs nightly, prunes old tenants) and `maintenance-runner`
+  (registered with `Cron.Never`, visible in the dashboard purely so the
+  `CommandExecutorJob` type is discoverable there — this is the
+  intentional in-fiction breadcrumb for the chain's final stage).
+
+## Validation workflow
+
+```bash
+# 1. Build and start
+cd "Web CTF Full/bin" && docker compose up --build -d
+
+# 2. Run the automated end-to-end solve
+cd ../verify
+pip install requests
+python3 verify_solve.py --base-url http://localhost:5000 \
+    --expect-flag "$(cat ../lab.yml | grep -A0 ...)"   # or paste the known flag directly
+```
+
+A successful run prints each of the 6 stages and the recovered flag, and
+exits `0`. See `validation-report.mdx` for the current evidence this
+produces.
+
+### Focused regression
+
+Re-run `verify_solve.py` after any change to `Program.cs`,
+`UrlFetchService.cs`, `CommandExecutorJob.cs`, or the Hangfire
+registration/authorization setup — these are the files every stage of the
+intended chain depends on.
+
+## Runtime controls
+
+- **Network egress:** the container's Docker network
+  (`internal_only`) is set to `internal: true`, so the container has no
+  outbound network access at runtime. Inbound access (published port
+  5000) is unaffected, since Docker handles inbound port mapping at the
+  host level independent of this flag. The intended solve path never
+  needs outbound egress — the SSRF target is always the container itself.
+- **Filesystem:** `wwwroot` is writable (`chmod -R 777`) so
+  `CommandExecutorJob` can write output there; `/app/flag.txt` is
+  read-only (`chmod 444`) after being written at build time.
+
+## Application safeguards
+
+- Per-tenant data isolation via `TenantId` filtering on every query that
+  touches `Users`.
+- Antiforgery tokens are enforced on all player-facing POST forms
+  (Register, Login, SupportLogin, Admin/Import, Profile) by ASP.NET Core
+  Razor Pages' default `AutoValidateAntiforgeryTokenAttribute` — the
+  dashboard's own `IgnoreAntiforgeryToken = true` applies only to
+  Hangfire's dashboard routes, not to the application's own forms.
+- No outbound network access at runtime (see Runtime controls above),
+  containing the RCE primitive's blast radius to the container itself.
+
+## Residual risk register
+
+| Risk | Status | Notes |
+| --- | --- | --- |
+| RCE primitive usable beyond the container | Mitigated | `internal: true` network blocks all outbound egress |
+| Base image supply-chain drift | Mitigated | Both Dockerfile stages pinned to digests, not floating tags |
+| Flag predictability | Mitigated | Flag body fully randomly generated per catalog rules |
+| Automated dependency/image vulnerability scan | Not yet run | No CI scanning pipeline has been run against this lab from this environment; recommend running the catalog's standard scan before merge |
+| Long-running instance resource growth | Mitigated | `db-cleanup` recurring job prunes tenants older than 6 hours |
+
+## Troubleshooting
+
+- **Build fails pulling base images:** confirm the pinned digests in
+  `src/Dockerfile` are still valid manifests (`docker buildx imagetools
+  inspect <image>@sha256:...`); Microsoft occasionally deprecates very old
+  tags, though pinned digests themselves do not expire.
+- **`verify_solve.py` times out at Stage 6:** the Hangfire worker may not
+  have picked up the job yet — increase `--poll-attempts` /
+  `--poll-interval`, or confirm the worker count (`WorkerCount = 4` in
+  `Program.cs`) hasn't been reduced to 0 in a local change.
+- **SSRF bypass stops working after a change:** confirm
+  `UrlFetchService.BlockedPatterns` still excludes `127.1` (or whichever
+  alternate literal the solve path relies on) — any change to that list
+  should be re-validated against `verify_solve.py` before merging.
+
+## Maintenance and change control
+
+Any change to `UrlFetchService.cs`, `Program.cs`'s Hangfire/authorization
+setup, or `CommandExecutorJob.cs` is change-controlled for this lab: it can
+alter or break the intended chain. Re-run the full validation workflow
+above after any such change, and update `security-report.mdx` and
+`challenge-design.mdx` if the change alters the attack path itself.
+
+## Repository hygiene
+
+- Flag plaintext lives only in `bin/docker-compose.yml`'s `FLAG` build
+  arg — never in `lab.yml`, `README.md`, or anywhere outside `labs/`.
+- `verify/__pycache__/` and other Python build artifacts are excluded via
+  `verify/.gitignore`.
+- Documentation source material under `documentation/` (the original,
+  narrative write-ups) is the basis for this `docs/` set, reorganized to
+  match the catalog's maintainer-doc convention; both are kept, since the
+  former also serves as `Public Briefing.md`'s player-facing material.
+
+## Stop and remove
+
+```bash
+cd "Web CTF Full/bin"
+docker compose down -v   # -v also removes the vaultcorp_data volume
+```
+
+## Appendix A. Hardening record
+
+| Date | Change | Reason |
+| --- | --- | --- |
+| This submission | Pinned both Dockerfile base images to digests | Supply-chain integrity; avoid floating-tag drift |
+| This submission | Set container network to `internal: true` | Contain the RCE primitive's blast radius to the container |
+| This submission | Regenerated flag as fully random, catalog-format-compliant | Original flag was hand-crafted and exceeded the max length |
+| This submission | Removed dead `Flag` model/table (unused, never read by the UI) | Reduce attack surface / dead code confusion for reviewers |

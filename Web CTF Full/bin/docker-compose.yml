@@ -12,6 +12,8 @@ services:
         # (braces included) is recorded as flag_hash in lab.yml.
         FLAG: "duck{z80wxfgg31zc62xcgeq7qt77s6323iq3}"
     container_name: vaultcorp
+    networks:
+      - internal_only
     ports:
       - "5000:5000"
     volumes:
@@ -20,6 +22,16 @@ services:
     restart: unless-stopped
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
+
+networks:
+  # No outbound internet access from the container at runtime — nothing
+  # in the intended solve path needs egress (the RCE is only ever used
+  # to read a local file). Published ports still work normally: Docker
+  # handles inbound port mapping at the host level via iptables DNAT,
+  # independent of this network's "internal" flag, so the player can
+  # still reach http://localhost:5000 as usual.
+  internal_only:
+    internal: true
 
 volumes:
   vaultcorp_data:

@@ -146,14 +146,13 @@ representations, since only one of several common ones is actually
 unblocked.
 
 **Safety boundaries:** the only destructive-capable primitive is
-`CommandExecutorJob.Run`, which executes via `/bin/sh -c`. As of the RCE
-containment fix, the container has no outbound network access at runtime
-(`docker-compose.yml`'s `internal: true` network), so the intended
-primitive — and any unintended command a player tries — cannot be used to
-reach anything outside the container. Inbound access (the player's own
-HTTP requests to the app) is unaffected, since Docker's port publishing is
-handled at the host level, independent of the container's own network
-egress.
+`CommandExecutorJob.Run`, which executes via `/bin/sh -c`. An attempted
+RCE-containment fix (`docker-compose.yml`'s `internal: true` network) was
+reverted after local verification on Docker Desktop (Windows) showed it
+also breaks inbound port publishing there — the container became
+unreachable at `http://localhost:5000` entirely. Outbound network egress
+is therefore currently unrestricted at the Docker level; see
+`operations.mdx`'s residual risk register for the accepted trade-off.
 
 ## Appendix A. Implementation reference
 

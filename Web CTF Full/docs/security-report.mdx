@@ -203,11 +203,12 @@ run status.
 
 None identified during authoring or review beyond the intended chain. The
 main unintended-path risk this design is aware of is the RCE primitive's
-blast radius if the container retained outbound network access — this was
-closed by setting the container's Docker network to `internal: true` (see
-`docker-compose.yml`), so the command-execution primitive cannot be used
-for anything beyond the container's own filesystem, regardless of what
-command a player tries.
+blast radius if the container retains outbound network access. An attempt
+to close this by setting the container's Docker network to
+`internal: true` (`docker-compose.yml`) was reverted after local
+verification showed it breaks inbound port publishing on Docker Desktop
+(Windows/Mac) — see `operations.mdx`'s residual risk register for the
+current, open status of this item.
 
 ## Conclusion
 

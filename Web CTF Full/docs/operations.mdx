@@ -103,12 +103,18 @@ intended chain depends on.
 
 ## Runtime controls
 
-- **Network egress:** the container's Docker network
-  (`internal_only`) is set to `internal: true`, so the container has no
-  outbound network access at runtime. Inbound access (published port
-  5000) is unaffected, since Docker handles inbound port mapping at the
-  host level independent of this flag. The intended solve path never
-  needs outbound egress — the SSRF target is always the container itself.
+- **Network egress:** the container's Docker network (`internal_only`)
+  was briefly set to `internal: true` for egress isolation, then
+  reverted after the author's local `docker compose up --build` run on
+  Docker Desktop (Windows) showed the published port (5000) was
+  unreachable from the host — Docker Desktop's WSL2/Hyper-V networking
+  layer does not reliably set up inbound port forwarding for an
+  `internal: true` network, unlike native Linux Docker. The intended
+  solve path never needs outbound egress (the SSRF target is always the
+  container itself), so this is a straightforward trade — real-world
+  Docker Desktop compatibility over additional defense-in-depth that the
+  solve doesn't rely on. See `security-report.mdx`'s residual risk
+  register for the implication.
 - **Filesystem:** `wwwroot` is writable (`chmod -R 777`) so
   `CommandExecutorJob` can write output there; `/app/flag.txt` is
   read-only (`chmod 444`) after being written at build time.
@@ -122,14 +128,15 @@ intended chain depends on.
   Razor Pages' default `AutoValidateAntiforgeryTokenAttribute` — the
   dashboard's own `IgnoreAntiforgeryToken = true` applies only to
   Hangfire's dashboard routes, not to the application's own forms.
-- No outbound network access at runtime (see Runtime controls above),
-  containing the RCE primitive's blast radius to the container itself.
+- Outbound network egress is currently unrestricted at the Docker level
+  (see "Runtime controls" above for why) — this is a known, accepted gap,
+  not an oversight; see the residual risk register below.
 
 ## Residual risk register
 
 | Risk | Status | Notes |
 | --- | --- | --- |
-| RCE primitive usable beyond the container | Mitigated | `internal: true` network blocks all outbound egress |
+| RCE primitive usable beyond the container | **Open** | `internal: true` was reverted — Docker Desktop (Windows/Mac) doesn't reliably publish ports on an internal network. The intended solve path never needs egress, but a player's own command execution is no longer network-isolated at the Docker layer. Acceptable for a single-player, locally-run lab; would need a different containment approach (e.g. an egress firewall rule, or a Linux-only deployment target) before any shared/hosted deployment. |
 | Base image supply-chain drift | Mitigated | Both Dockerfile stages pinned to digests, not floating tags |
 | Flag predictability | Mitigated | Flag body fully randomly generated per catalog rules |
 | Automated dependency/image vulnerability scan | Not yet run | No CI scanning pipeline has been run against this lab from this environment; recommend running the catalog's standard scan before merge |
@@ -181,6 +188,6 @@ docker compose down -v   # -v also removes the vaultcorp_data volume
 | Date | Change | Reason |
 | --- | --- | --- |
 | This submission | Pinned both Dockerfile base images to digests | Supply-chain integrity; avoid floating-tag drift |
-| This submission | Set container network to `internal: true` | Contain the RCE primitive's blast radius to the container |
+| This submission | Set container network to `internal: true`, then reverted it | Attempted to contain the RCE primitive's blast radius; reverted after it broke port publishing on Docker Desktop during local verification (see Residual risk register) |
 | This submission | Regenerated flag as fully random, catalog-format-compliant | Original flag was hand-crafted and exceeded the max length |
 | This submission | Removed dead `Flag` model/table (unused, never read by the UI) | Reduce attack surface / dead code confusion for reviewers |

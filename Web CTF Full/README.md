@@ -99,7 +99,7 @@ Then navigate to `http://localhost:5000`.
 
 ## Design Summary
 
-- **Per-player isolation** — each `Register` creates a fully isolated tenant with unique admin credentials and a unique flag. Players cannot interfere with each other.
+- **Per-player isolation** — each `Register` creates a fully isolated tenant with unique admin credentials. The flag itself is baked into the deployed image at build time and is the same for every tenant in a given deployment (see `docs/challenge-design.mdx`, "Determinism and flag design") — isolation applies to account data, not to the flag value. Players cannot interfere with each other's tenant data.
 - **Chain dependency** — no stage can be skipped. Stages 1→2→3→4→5→6 must be completed in order.
 - **All real** — every vulnerability has a published CVE, OWASP entry, or documented bug bounty report. Nothing is contrived.
 - **Single container** — no complex infrastructure. One `docker compose up` and the challenge is live.

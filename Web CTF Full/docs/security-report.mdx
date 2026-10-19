@@ -210,6 +210,18 @@ verification showed it breaks inbound port publishing on Docker Desktop
 (Windows/Mac) — see `operations.mdx`'s residual risk register for the
 current, open status of this item.
 
+**Network egress — current state vs. ideal:** egress from the container
+is **open today** — not restricted at the Docker level, so code executed
+via VC-CTF-05 could in principle reach the outside network, not just the
+container's own filesystem. The **ideal** posture is deny-by-default
+egress (no outbound network access for the container at all, allowlisting
+nothing, since the intended solve path never needs it). This lab does not
+implement that ideal today because the one mechanism tried to approach it
+(`internal: true`) broke inbound port publishing on Docker Desktop; no
+alternative (e.g. a host-level egress firewall rule, or restricting this
+deployment target to native Linux Docker) has been implemented yet. This
+is tracked as an open item, not treated as already mitigated.
+
 ## Conclusion
 
 VaultCorp intentionally reproduces a realistic, documented

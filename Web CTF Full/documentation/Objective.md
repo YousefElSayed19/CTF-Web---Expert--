@@ -30,7 +30,7 @@ The challenge tests the following skills in sequence:
 
 - **Realistic scenario** — every vulnerability reflects a pattern found in real production .NET applications.
 - **Chain dependency** — no stage can be skipped. Each step unlocks the next.
-- **Per-player isolation** — each registration creates a fully isolated tenant (unique admin credentials, unique flag). No player can interfere with another.
+- **Per-player isolation** — each registration creates a fully isolated tenant with unique admin credentials. No player can interfere with another's tenant data. The flag itself is baked into the deployed image at build time and is shared across every tenant in a given deployment, not unique per registration (see `docs/challenge-design.mdx`, "Determinism and flag design").
 - **No guessing** — every discovery has a logical path. Nothing requires blind luck.
 
 ---

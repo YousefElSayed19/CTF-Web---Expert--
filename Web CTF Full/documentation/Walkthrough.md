@@ -11,7 +11,7 @@
 
 ### Step 1 — Register and log in
 
-Navigate to the target and register a normal account. This creates a fully isolated tenant on the backend — a fake company with its own admin account, noise employees, and a unique flag.
+Navigate to the target and register a normal account. This creates a fully isolated tenant on the backend — a fake company with its own admin account and noise employees. (The flag itself is baked into the deployed image at build time and is the same for every tenant in this deployment — it's the tenant's *account data* that's unique per registration, not the flag.)
 
 > 
 > 

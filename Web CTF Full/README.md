@@ -23,12 +23,18 @@ A custom-built, multi-stage web exploitation challenge simulating a realistic Sa
 ├── bin/                        ← challenge files for the participant
 │   └── docker-compose.yml      ← everything needed to run the challenge
 │
-├── documentation/              ← written evidence / report
-│   ├── Objective.md
-│   ├── Public Briefing.md
-│   ├── Walkthrough.md
-│   ├── What Happened and Why (Root Cause).md
-│   └── Mitigation.md
+├── docs/                        ← all written evidence/report + maintainer docs
+│   ├── README.md
+│   ├── player-briefing.mdx     ← player-facing description (no spoilers)
+│   ├── challenge-design.mdx
+│   ├── official-solution.mdx   ← full spoiler solve, including the narrated,
+│   │                               screenshot-illustrated walkthrough
+│   ├── operations.mdx
+│   ├── security-report.mdx
+│   ├── remediation.mdx
+│   ├── validation-report.mdx
+│   └── images/                 ← screenshots referenced from official-solution.mdx
+│
 └── src/                        ← full source code (private — never ship to participants)
     ├── VaultCorp.csproj
     ├── Program.cs
@@ -77,11 +83,11 @@ A custom-built, multi-stage web exploitation challenge simulating a realistic Sa
 
 | If you want to… | Go to |
 | --- | --- |
-| Understand what the challenge tests | `documentation/Objective.md` |
-| See the player-facing description (no spoilers) | `documentation/Public Briefing.md` |
-| Reproduce the full solve step by step | `documentation/Walkthrough.md` |
-| Understand the security root cause | `documentation/What Happened and Why (Root Cause).md` |
-| See mitigation recommendations | `documentation/Mitigation.md` |
+| Understand what the challenge tests | `docs/challenge-design.mdx` ("Skills exercised") |
+| See the player-facing description (no spoilers) | `docs/player-briefing.mdx` |
+| Reproduce the full solve step by step, with screenshots | `docs/official-solution.mdx` ("Full narrated walkthrough") |
+| Understand the security root cause | `docs/security-report.mdx` |
+| See mitigation recommendations | `docs/remediation.mdx` |
 | Run the challenge | `bin/docker-compose.yml` |
 
 ---

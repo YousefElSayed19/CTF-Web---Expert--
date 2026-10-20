@@ -32,6 +32,17 @@ words:
 - How command output written to a web-servable directory turns an RCE
   primitive into a one-request data exfiltration path.
 
+## Skills exercised
+
+| Stage | Skill |
+| --- | --- |
+| 1 | JavaScript source analysis + custom encoding (XOR + Base64) |
+| 2 | Directory brute-forcing with SecLists |
+| 3 | Server-Side Request Forgery (SSRF) with WAF bypass via IP obfuscation |
+| 4 | Internal service enumeration via blind SSRF port scanning |
+| 5 | Unauthenticated Hangfire dashboard access via loopback trust |
+| 6 | Remote Code Execution via Hangfire job injection |
+
 ## Story and actors
 
 VaultCorp is framed as a cloud backup SaaS. The player registers a free

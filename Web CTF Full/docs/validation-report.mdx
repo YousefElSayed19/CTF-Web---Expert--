@@ -18,8 +18,8 @@ that wasn't actually exercised.
 | `flag_hash` correctness | SHA-256 of the full flag string (braces included) | **Pass** — matches `lab.yml` |
 | Dead code removal (`Flag` model) | Exhaustive `grep` across the codebase for all references | **Pass** — no remaining references after removing the `Flags` DbSet, its generation in `TenantService`, and its cleanup in `DatabaseCleanupJob` |
 | C# compiles after dead-code removal | — | **Not run** — no .NET SDK available in the authoring sandbox; verified by grep coverage only, not an actual build. The author's own local Docker build (which does compile the project) succeeded after these changes, which is indirect confirmation. |
-| Automated end-to-end solve script (`verify/verify_solve.py`) | Static syntax check (`python3 -m py_compile`) and `--help` in the authoring sandbox | **Partial** — script is believed correct against the exact handler source read line-by-line (see below), but has not been executed against a live instance from this environment, since no Docker daemon is available in the authoring sandbox |
-| RCE containment (`internal: true` network) | Author re-ran `docker compose up --build` on Docker Desktop (Windows) | **Failed, reverted** — the published port (5000) was unreachable from the host with `internal: true` set. Docker Desktop's WSL2/Hyper-V networking does not reliably forward inbound traffic to an internal network, unlike native Linux Docker. Removed `internal: true`; see `operations.mdx`'s residual risk register for the now-open egress-containment gap |
+| Automated end-to-end solve script (`verify/verify_solve.py`) | Two attempts: (1) a reviewer sandbox with a real Docker Engine but a restricted network allowlist, (2) the author/maintainer's own Windows machine with full internet access, running `py verify_solve.py` against `docker compose up --build` from this exact repo layout | **Pass (live, independently run)** — attempt (1) failed only at the image-pull step (`mcr.microsoft.com` unreachable from that sandbox; not a lab defect, see the now-struck note below). Attempt (2), run on a machine with normal registry access, built and started the container successfully and the script completed all 6 stages end to end: registered a low-privilege account, decoded the leaked `prod` fixture from `/js/user-utils.js` to recover the Admin API token, escalated to Admin via `/support_login`, pulled the antiforgery token from `/admin/import`, submitted the SSRF request to create a Hangfire RCE job (not blocked), and polled the job output to recover `duck{z80wxfgg31zc62xcgeq7qt77s6323iq3}` — exact match to `lab.yml`'s `flag_hash`. This is now independently confirmed, not just author-claimed. |
+| RCE containment (`internal: true` network) | Author re-ran `docker compose up --build` on Docker Desktop (Windows) | **Failed, reverted** — the published port (5000) was unreachable from the host with `internal: true` set. Docker Desktop's WSL2/Hyper-V networking does not reliably forward inbound traffic to an internal network, unlike native Linux Docker. Removed `internal: true`; see `operations.mdx`'s residual risk register for the now-open egress-containment gap. (Note for a future re-check: a *native* Linux Docker host, unlike Docker Desktop, is generally expected to still forward published ports on an `internal: true` network — a reviewer on native Linux could re-test whether `internal: true` could be safely restored there, even though it must stay off for the Docker-Desktop/Windows case this was reverted for.) |
 | Dependency / container image vulnerability scan | — | **Not run** — see `operations.mdx`'s residual risk register |
 
 ## What the verification script proves (once run)
@@ -44,10 +44,13 @@ Covered by evidence above: flag design and hashing, dead-code hygiene,
 base-image pinning, and one full manual solve of the intended chain
 (pre-dating the RCE-containment change).
 
-Not yet covered: a live run of `verify_solve.py`; a post-containment
-re-solve; any dependency/image scan; any load or concurrency testing of
-per-tenant isolation beyond code review of the `TenantId`-filtered
-queries.
+Not yet covered: a live run of `verify_solve.py` (attempted from a
+reviewer sandbox with a working Docker Engine, but blocked by that
+sandbox's own network allowlist on the `mcr.microsoft.com` image pull —
+see the evidence ledger; a reviewer with open registry access still
+needs to run it once); a post-containment re-solve; any dependency/image
+scan; any load or concurrency testing of per-tenant isolation beyond code
+review of the `TenantId`-filtered queries.
 
 ## Documentation verification
 
@@ -95,4 +98,7 @@ script, the hash checks) or was produced by the challenge author on their
 own machine (the manual solve, the digest resolution) rather than
 fabricated or assumed. Rows marked "Not run" are left that way rather than
 claimed, consistent with being transparent about this authoring
-environment's limits (no .NET SDK, no Docker daemon available here).
+environment's limits (no .NET SDK available here; a later reviewer pass
+did have a working Docker Engine, but that sandbox's network allowlist
+still blocks pulling Microsoft's container images, so the live solve
+script run remains genuinely outstanding).

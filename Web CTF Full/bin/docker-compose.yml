@@ -6,11 +6,13 @@ services:
       context: ../src
       dockerfile: Dockerfile
       args:
-        # Flag plaintext lives only here (a service file inside the lab
-        # directory) — it must never be written to lab.yml, README.md,
-        # or anywhere outside labs/. The SHA-256 of this exact string
-        # (braces included) is recorded as flag_hash in lab.yml.
-        FLAG: "duck{z80wxfgg31zc62xcgeq7qt77s6323iq3}"
+        # The real flag value is NOT committed here — it is read from a
+        # local, git-ignored .env file (see bin/.env.example) so no
+        # git-facing file ever carries the plaintext flag. Copy
+        # .env.example to .env and fill in the real FLAG before running
+        # `docker compose up --build`. The SHA-256 of the full flag
+        # string (braces included) is recorded as flag_hash in lab.yml.
+        FLAG: "${FLAG:?Set FLAG in bin/.env — copy bin/.env.example to bin/.env and fill in the real flag first}"
     container_name: vaultcorp
     networks:
       - internal_only

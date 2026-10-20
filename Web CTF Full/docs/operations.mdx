@@ -18,8 +18,15 @@ src/                      -> application source
 
 ```bash
 cd "Web CTF Full/bin"
+cp .env.example .env   # then edit .env and set the real FLAG value
 docker compose up --build -d
 ```
+
+`.env` is git-ignored (`bin/.gitignore`) — only the placeholder
+`.env.example` is committed. This keeps the plaintext flag out of every
+git-tracked file, including `docker-compose.yml` itself (it previously
+held the literal flag string as a build-arg default; that has been
+replaced with a required `${FLAG}` substitution sourced from `.env`).
 
 The app is then reachable at `http://localhost:5000`. First start also
 runs `Database.EnsureCreated()`, so no separate migration step is needed.
@@ -28,7 +35,7 @@ runs `Database.EnsureCreated()`, so no separate migration step is needed.
 
 | Setting | Source | Notes |
 | --- | --- | --- |
-| `FLAG` | `docker-compose.yml` build arg | Baked into `/app/flag.txt` at image build time; plaintext lives only in this service file, never in `lab.yml` or `README.md`. See "Image-layer handling of the flag" below for what this means for anyone with the built image itself, not just the running container. |
+| `FLAG` | `bin/.env` (git-ignored; `${FLAG}` substituted into the `docker-compose.yml` build arg) | Baked into `/app/flag.txt` at image build time; plaintext never appears in any git-tracked file — not `docker-compose.yml`, not `lab.yml`, not `README.md`. See "Image-layer handling of the flag" below for what this means for anyone with the built image itself, not just the running container. |
 | `ASPNETCORE_ENVIRONMENT` | `docker-compose.yml` environment | `Production` |
 | Session idle timeout | `Program.cs` (`AddSession`) | 4 hours |
 | Base images | `src/Dockerfile` | Pinned to digests (`FROM ...@sha256:...`) for both the SDK and runtime stages |
@@ -52,10 +59,12 @@ This is an accepted, deliberate trade-off for this submission because the
 built image is never intended to be distributed, published to a
 registry, or shared with players — the lab reaches players only through
 `bin/docker-compose.yml`, which builds a fresh image locally per
-deployment from `src/`, with the real `FLAG` value substituted at build
-time by whoever (author or maintainer) controls that `docker compose
-up --build`. Distributing the pre-built image itself, or committing the
-build cache/layers anywhere, would leak the flag and must not be done.
+deployment from `src/`, with the real `FLAG` value read from the
+deployer's own `bin/.env` (not committed; see "Start the lab" above) and
+substituted at build time by whoever (author or maintainer) controls
+that `docker compose up --build`. Distributing the pre-built image
+itself, or committing the build cache/layers anywhere, would leak the
+flag and must not be done.
 If this lab is ever deployed in a way where built images are shared,
 pushed to a registry, or otherwise handed to anyone who shouldn't see the
 flag, this flag-delivery mechanism would need to change (e.g. injecting

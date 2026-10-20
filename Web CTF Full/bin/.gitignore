@@ -1,0 +1,2 @@
+# Real flag value lives here only, never in a git-tracked file.
+.env

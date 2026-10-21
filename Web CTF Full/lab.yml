@@ -1,5 +1,5 @@
 contract_version: 1
-name: vaultcorp-ssrf-rce
+name: vaultcorp
 track: web
 difficulty: hard
 description: Six-stage SaaS exploit chain from client-side secret leak to SSRF-driven RCE via an unauthenticated Hangfire dashboard (CVE-2021-41238).

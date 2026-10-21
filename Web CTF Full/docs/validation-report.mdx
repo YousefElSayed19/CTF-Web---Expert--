@@ -80,8 +80,10 @@ A reviewer can independently confirm this lab without trusting any claim
 above, by running:
 
 ```bash
-cd "Web CTF Full/bin" && docker compose up --build -d
-cd ../verify && pip install requests
+cd "Web CTF Full"
+echo 'FLAG=duck{z80wxfgg31zc62xcgeq7qt77s6323iq3}' > .env
+docker compose up --build -d
+cd verify && pip install requests
 python3 verify_solve.py --base-url http://localhost:5000 \
     --expect-flag duck{z80wxfgg31zc62xcgeq7qt77s6323iq3}
 ```

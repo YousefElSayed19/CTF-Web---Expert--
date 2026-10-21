@@ -20,8 +20,8 @@ A custom-built, multi-stage web exploitation challenge simulating a realistic Sa
 ```
 .
 │
-├── bin/                        ← challenge files for the participant
-│   └── docker-compose.yml      ← everything needed to run the challenge
+├── docker-compose.yml          ← everything needed to run the challenge
+├── .env.example                ← copy to .env and set the real FLAG (never committed)
 │
 ├── docs/                        ← all written evidence/report + maintainer docs
 │   ├── README.md
@@ -40,13 +40,11 @@ A custom-built, multi-stage web exploitation challenge simulating a realistic Sa
     ├── Program.cs
     ├── appsettings.json
     ├── Dockerfile
-    ├── docker-compose.yml
     ├── Data/
     │   ├── AppDbContext.cs
     │   └── Models/
     │       ├── Tenant.cs
-    │       ├── User.cs
-    │       └── Flag.cs
+    │       └── User.cs
     ├── Services/
     │   ├── TenantService.cs
     │   └── UrlFetchService.cs
@@ -88,15 +86,15 @@ A custom-built, multi-stage web exploitation challenge simulating a realistic Sa
 | Reproduce the full solve step by step, with screenshots | `docs/official-solution.mdx` ("Full narrated walkthrough") |
 | Understand the security root cause | `docs/security-report.mdx` |
 | See mitigation recommendations | `docs/remediation.mdx` |
-| Run the challenge | `bin/docker-compose.yml` |
+| Run the challenge | `docker-compose.yml` |
 
 ---
 
 ## Running the Challenge
 
 ```bash
-cd bin/
-docker compose up
+cp .env.example .env   # then edit .env and set the real FLAG value
+docker compose up --build
 ```
 
 Then navigate to `http://localhost:5000`.

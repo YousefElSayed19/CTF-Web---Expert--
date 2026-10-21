@@ -32,7 +32,7 @@ vulnerability root-cause writeup.
 `39a58dfd73f798ab8ea74bd4a2a9d4f2108eb8fe411ad7f2cd94734d645dc4a0`
 
 The flag is baked into the deployed image at build time
-(`bin/docker-compose.yml`'s `FLAG` build arg) and is the same for every
+(`docker-compose.yml`'s `FLAG` build arg) and is the same for every
 tenant in a given deployment — see `challenge-design.mdx`, "Determinism
 and flag design."
 
@@ -340,7 +340,7 @@ duck{s3rv3r_s1d3_r3qu3st_t0_h4ngf1r3_rce_ch41n}
 
 > **Note (screenshot provenance):** this screenshot run predates the
 > current `lab.yml`'s `flag_hash`. The flag is generated fresh at image
-> build time (`bin/docker-compose.yml`'s `FLAG` build arg) and the value
+> build time (`docker-compose.yml`'s `FLAG` build arg) and the value
 > shown above (`duck{s3rv3r_s1d3_r3qu3st_t0_h4ngf1r3_rce_ch41n}`) is
 > specific to that earlier build — it will not match a freshly built
 > image's flag. The chain of steps above (Stages 1–6) is unaffected; only

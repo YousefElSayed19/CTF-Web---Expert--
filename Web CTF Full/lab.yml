@@ -1,4 +1,3 @@
----
 contract_version: 1
 name: vaultcorp-ssrf-rce
 track: web
@@ -13,4 +12,3 @@ port: 5000
 # Proposed technique slugs (pages not yet written under content/technique/ —
 # add them and uncomment once authored):
 # techniques: [ssrf-waf-bypass-ip-obfuscation, hangfire-unauthenticated-dashboard-rce, client-side-secret-leak-obfuscated-js, hidden-endpoint-directory-bruteforce]
----

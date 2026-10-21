@@ -9,7 +9,7 @@ UI, the Hangfire dashboard/worker, and static file serving — all on port
 dependency at runtime.
 
 ```
-bin/docker-compose.yml   -> build context: ../src, service: vaultcorp
+docker-compose.yml   -> build context: ./src, service: vaultcorp
 src/Dockerfile           -> multi-stage build (sdk -> aspnet runtime)
 src/                      -> application source
 ```
@@ -17,12 +17,12 @@ src/                      -> application source
 ## Start the lab
 
 ```bash
-cd "Web CTF Full/bin"
+cd "Web CTF Full"
 cp .env.example .env   # then edit .env and set the real FLAG value
 docker compose up --build -d
 ```
 
-`.env` is git-ignored (`bin/.gitignore`) — only the placeholder
+`.env` is git-ignored (`.gitignore`) — only the placeholder
 `.env.example` is committed. This keeps the plaintext flag out of every
 git-tracked file, including `docker-compose.yml` itself (it previously
 held the literal flag string as a build-arg default; that has been
@@ -35,7 +35,7 @@ runs `Database.EnsureCreated()`, so no separate migration step is needed.
 
 | Setting | Source | Notes |
 | --- | --- | --- |
-| `FLAG` | `bin/.env` (git-ignored; `${FLAG}` substituted into the `docker-compose.yml` build arg) | Baked into `/app/flag.txt` at image build time; plaintext never appears in any git-tracked file — not `docker-compose.yml`, not `lab.yml`, not `README.md`. See "Image-layer handling of the flag" below for what this means for anyone with the built image itself, not just the running container. |
+| `FLAG` | `.env` (git-ignored; `${FLAG}` substituted into the `docker-compose.yml` build arg) | Baked into `/app/flag.txt` at image build time; plaintext never appears in any git-tracked file — not `docker-compose.yml`, not `lab.yml`, not `README.md`. See "Image-layer handling of the flag" below for what this means for anyone with the built image itself, not just the running container. |
 | `ASPNETCORE_ENVIRONMENT` | `docker-compose.yml` environment | `Production` |
 | Session idle timeout | `Program.cs` (`AddSession`) | 4 hours |
 | Base images | `src/Dockerfile` | Pinned to digests (`FROM ...@sha256:...`) for both the SDK and runtime stages |
@@ -58,9 +58,9 @@ a bug specific to this lab.
 This is an accepted, deliberate trade-off for this submission because the
 built image is never intended to be distributed, published to a
 registry, or shared with players — the lab reaches players only through
-`bin/docker-compose.yml`, which builds a fresh image locally per
+`docker-compose.yml`, which builds a fresh image locally per
 deployment from `src/`, with the real `FLAG` value read from the
-deployer's own `bin/.env` (not committed; see "Start the lab" above) and
+deployer's own `.env` (not committed; see "Start the lab" above) and
 substituted at build time by whoever (author or maintainer) controls
 that `docker compose up --build`. Distributing the pre-built image
 itself, or committing the build cache/layers anywhere, would leak the
@@ -119,10 +119,10 @@ anything else in `Program.cs`.
 
 ```bash
 # 1. Build and start
-cd "Web CTF Full/bin" && docker compose up --build -d
+cd "Web CTF Full" && docker compose up --build -d
 
 # 2. Run the automated end-to-end solve
-cd ../verify
+cd verify
 pip install requests
 python3 verify_solve.py --base-url http://localhost:5000 \
     --expect-flag "$(cat ../lab.yml | grep -A0 ...)"   # or paste the known flag directly
@@ -205,7 +205,7 @@ above after any such change, and update `security-report.mdx` and
 
 ## Repository hygiene
 
-- Flag plaintext lives only in `bin/docker-compose.yml`'s `FLAG` build
+- Flag plaintext lives only in `docker-compose.yml`'s `FLAG` build
   arg — never in `lab.yml`, `README.md`, or anywhere outside `labs/`.
 - `verify/__pycache__/` and other Python build artifacts are excluded via
   `verify/.gitignore`.
@@ -216,7 +216,7 @@ above after any such change, and update `security-report.mdx` and
 ## Stop and remove
 
 ```bash
-cd "Web CTF Full/bin"
+cd "Web CTF Full"
 docker compose down -v   # -v also removes the vaultcorp_data volume
 ```
 
